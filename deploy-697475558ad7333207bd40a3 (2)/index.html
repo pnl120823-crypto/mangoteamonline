@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Học Từ Vựng</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            green: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+    .incorrect { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+    @media print { .no-print { display: none !important; } }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-white border-b border-gray-200 no-print">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
+          <i data-lucide="book-open" class="w-5 h-5 text-white"></i>
+        </div>
+        <span class="text-lg font-bold text-green-600">Học Từ Vựng</span>
+      </div>
+      <div class="flex-1 max-w-md mx-6 hidden md:block">
+        <div class="relative">
+          <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+          <input type="text" placeholder="Tìm kiếm bài học..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none text-gray-700 text-sm"/>
+        </div>
+      </div>
+      <nav class="flex items-center gap-4 text-gray-600 text-sm font-medium">
+        <a href="#" onclick="showPage('home')" class="hover:text-green-600 transition">Dashboard</a>
+        <a href="#" onclick="showPage('quiz')" class="hover:text-green-600 transition">Quiz</a>
+        <a href="#" onclick="showPage('export')" class="hover:text-green-600 transition">Xuất bài</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <!-- HOME PAGE -->
+    <div id="page-home" class="page">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Bài học</h1>
+        <button onclick="showLessonForm()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+          <i data-lucide="plus" class="w-5 h-5"></i>
+          Tạo bài học
+        </button>
+      </div>
+      
+      <div class="relative mb-6">
+        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+        <input type="text" id="homeSearchLesson" placeholder="Tìm kiếm bài học..." 
+          class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none text-gray-700"
+          oninput="renderHomeLessons()">
+      </div>
+      
+      <div id="homeLessonsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+      <!-- Lesson Form Modal -->
+      <div id="lessonFormModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md mx-4">
+          <div class="flex items-center justify-between mb-5">
+            <h2 id="lessonFormTitle" class="text-lg font-bold text-gray-900">Tạo bài học mới</h2>
+            <button onclick="hideLessonForm()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
+              <i data-lucide="x" class="w-4 h-4 text-gray-500"></i>
+            </button>
+          </div>
+          <input type="hidden" id="editLessonId">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tên bài học *</label>
+              <input type="text" id="lessonTitle" class="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none" placeholder="Ví dụ: Lesson 1">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+              <textarea id="lessonDesc" class="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none resize-none" rows="3" placeholder="Mô tả ngắn về bài học..."></textarea>
+            </div>
+          </div>
+          <div class="flex gap-3 mt-5">
+            <button onclick="saveLesson()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium transition">Lưu</button>
+            <button onclick="hideLessonForm()" class="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition">Hủy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LESSON DETAIL PAGE -->
+    <div id="page-lesson-detail" class="page hidden">
+      <!-- Header -->
+      <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
+              <i data-lucide="check" class="w-6 h-6 text-white"></i>
+            </div>
+            <h1 id="lessonDetailTitle" class="text-xl font-bold text-gray-900"></h1>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="showPage('home')" class="text-gray-400 hover:text-gray-600 flex items-center gap-1">
+              <i data-lucide="chevron-left" class="w-5 h-5"></i>
+              Quay lại
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-6 border-b border-gray-200 mb-6">
+        <button onclick="showTab('list')" id="tab-list" class="pb-3 px-1 border-b-2 border-green-500 text-green-600 font-medium text-sm">Danh sách</button>
+        <button onclick="showTab('import')" id="tab-import" class="pb-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">Nhập nhanh</button>
+        <button onclick="showTab('export')" id="tab-export" class="pb-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm">Xuất / In</button>
+      </div>
+
+      <!-- Tab: List -->
+      <div id="tabContent-list">
+        <div class="flex flex-wrap gap-3 mb-4">
+          <div class="relative flex-1 min-w-[200px]">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+            <input type="text" id="searchVocab" placeholder="Tìm từ vựng..." 
+              class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none"
+              oninput="renderVocabList()">
+          </div>
+        </div>
+
+        <!-- Vocab Table -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th class="text-left p-3 font-medium text-gray-500 text-sm w-10"></th>
+                <th class="text-left p-3 font-medium text-gray-500 text-sm">English</th>
+                <th class="text-left p-3 font-medium text-gray-500 text-sm">Vietnamese</th>
+                <th class="text-left p-3 font-medium text-gray-500 text-sm hidden lg:table-cell">IPA</th>
+                <th class="text-left p-3 font-medium text-gray-500 text-sm hidden md:table-cell">POS</th>
+                <th class="text-left p-3 font-medium text-gray-500 text-sm hidden xl:table-cell">Example</th>
+                <th class="text-right p-3 font-medium text-gray-500 text-sm w-20 no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vocabTableBody" class="divide-y divide-gray-100"></tbody>
+          </table>
+        </div>
+
+        <!-- Add vocab -->
+        <div class="bg-white rounded-xl border border-gray-200 mt-4 p-4">
+          <div class="flex items-center justify-end gap-2">
+            <button onclick="showVocabForm()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              Thêm từ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Import -->
+      <div id="tabContent-import" class="hidden">
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <div class="bg-gray-50 p-4 rounded-lg mb-4">
+            <p class="text-sm text-gray-600">
+              Nhập mỗi từ một dòng theo format: <code class="bg-white px-2 py-1 rounded text-green-600 font-mono text-xs">english | vietnamese | ipa | pos | example</code>
+            </p>
+          </div>
+          <textarea id="importData" class="w-full p-4 rounded-lg border border-gray-200 font-mono text-sm focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none" rows="8" 
+            placeholder="apple | quả táo | ˈæpəl | noun | I have an apple.
+book | sách | bʊk | noun | This is your book."></textarea>
+          <div class="flex gap-3 mt-4">
+            <button onclick="importVocab()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium transition">Import</button>
+            <button onclick="showTab('list')" class="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition">Hủy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Export -->
+      <div id="tabContent-export" class="hidden">
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 id="exportLessonTitle" class="text-xl font-bold text-gray-900"></h2>
+            <div class="flex gap-2">
+              <button onclick="printExportDetail()" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium">
+                🖨️ Print
+              </button>
+              <button onclick="exportCSVDetail()" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition">
+                Export CSV
+              </button>
+            </div>
+          </div>
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="border border-gray-200 p-3 text-left font-medium text-gray-700">English</th>
+                <th class="border border-gray-200 p-3 text-left font-medium text-gray-700">Vietnamese</th>
+              </tr>
+            </thead>
+            <tbody id="exportDetailTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Vocab Form Modal -->
+      <div id="vocabFormModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-4">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-2xl mx-4 my-auto">
+          <div class="flex items-center justify-between mb-5">
+            <h2 id="vocabFormTitle" class="text-lg font-bold text-gray-900">Thêm từ vựng mới</h2>
+            <button onclick="hideVocabForm()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
+              <i data-lucide="x" class="w-4 h-4 text-gray-500"></i>
+            </button>
+          </div>
+          <input type="hidden" id="editVocabId">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">English *</label>
+              <div class="flex gap-2">
+                <input type="text" id="vocabEnglish" class="flex-1 p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none" placeholder="Nhập từ tiếng Anh...">
+                <button onclick="lookupWord()" id="btnLookup" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                  <i data-lucide="search" class="w-4 h-4"></i>
+                  Tra từ
+                </button>
+              </div>
+            </div>
+            
+            <!-- Dictionary Results Panel -->
+            <div id="dictResultsPanel" class="hidden md:col-span-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 max-h-[400px] overflow-y-auto">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-blue-800 flex items-center gap-2">
+                  <span class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">📖</span>
+                  Kết quả từ điển
+                </h3>
+                <button onclick="hideDictResults()" class="text-blue-500 hover:text-blue-700 text-sm flex items-center gap-1">
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                  Đóng
+                </button>
+              </div>
+              <div id="dictLoading" class="hidden text-center py-6">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-200 border-t-blue-600"></div>
+                <p class="text-blue-600 mt-2 text-sm">Đang tra từ...</p>
+              </div>
+              <div id="dictContent" class="space-y-3">
+                <!-- IPA & POS & Audio -->
+                <div id="dictBasicInfo" class="flex flex-wrap gap-2 items-center"></div>
+                <!-- Vietnamese Translation -->
+                <div id="dictVietnamese" class="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-300 rounded-lg p-3 shadow-sm"></div>
+                <!-- Definition (collapsible) -->
+                <details class="bg-white rounded-lg border border-gray-200 overflow-hidden" open>
+                  <summary class="px-3 py-2 bg-gray-50 cursor-pointer font-medium text-gray-700 text-sm hover:bg-gray-100 flex items-center gap-2">
+                    📚 Định nghĩa tiếng Anh
+                  </summary>
+                  <div id="dictDefinition" class="p-3 text-sm text-gray-600 max-h-[120px] overflow-y-auto"></div>
+                </details>
+                <!-- Examples (collapsible) -->
+                <details class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <summary class="px-3 py-2 bg-gray-50 cursor-pointer font-medium text-gray-700 text-sm hover:bg-gray-100 flex items-center gap-2">
+                    💡 Ví dụ
+                  </summary>
+                  <div id="dictExamples" class="p-3 space-y-1 text-sm"></div>
+                </details>
+                <!-- Related Words (collapsible) -->
+                <details class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <summary class="px-3 py-2 bg-gray-50 cursor-pointer font-medium text-gray-700 text-sm hover:bg-gray-100 flex items-center gap-2">
+                    🔗 Từ liên quan
+                  </summary>
+                  <div id="dictRelatedWords" class="p-3"></div>
+                </details>
+                <!-- Apply Buttons -->
+                <div id="dictActions" class="flex flex-wrap gap-2 pt-3 border-t border-blue-200"></div>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Vietnamese *</label>
+              <input type="text" id="vocabVietnamese" class="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">IPA</label>
+              <input type="text" id="vocabIpa" class="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">POS</label>
+              <select id="vocabPos" class="w-full p-3 rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none">
+                <option value="">--</option>
+                <option value="noun">noun</option>
+                <option value="verb">verb</option>
+                <option value="adj">adj</option>
+                <option value="adv">adv</option>
+                <option value="phrase">phrase</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Example</label>
+              <input type="text" id="vocabExample" class="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-200 focus:border-green-400 outline-none">
+            </div>
+          </div>
+          <div class="flex gap-3 mt-5">
+            <button onclick="saveVocab()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium transition">Lưu</button>
+            <button onclick="hideVocabForm()" class="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition">Hủy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUIZ PAGE -->
+    <div id="page-quiz" class="page hidden">
+      <!-- Quiz Setup -->
+      <div id="quizSetup" class="max-w-md mx-auto pt-8">
+        <h1 class="text-xl font-bold text-gray-900 mb-6">Kiểm tra từ vựng</h1>
+        
+        <div class="space-y-4">
+          <!-- Lesson Selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-2">Bài học</label>
+            <select id="quizLessonSelect" class="w-full p-3 rounded-lg border border-gray-200 bg-white focus:border-green-500 focus:ring-2 focus:ring-green-100 outline-none text-gray-800"></select>
+          </div>
+          
+          <!-- Mode Selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-2">Chế độ</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="setQuizMode('en-to-vi')" id="modeEnVi" class="relative p-4 rounded-lg border-2 border-green-500 bg-green-50 text-center transition">
+                <div class="absolute top-2 right-2 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                  <i data-lucide="check" class="w-2.5 h-2.5 text-white"></i>
+                </div>
+                <div class="font-semibold text-gray-800">Anh → Việt</div>
+              </button>
+              <button onclick="setQuizMode('vi-to-en')" id="modeViEn" class="relative p-4 rounded-lg border-2 border-gray-200 bg-white text-center transition hover:border-gray-300">
+                <div class="hidden absolute top-2 right-2 w-4 h-4 rounded-full bg-green-500 items-center justify-center" id="modeViEnCheck">
+                  <i data-lucide="check" class="w-2.5 h-2.5 text-white"></i>
+                </div>
+                <div class="font-semibold text-gray-800">Việt → Anh</div>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Options -->
+          <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer">
+            <input type="checkbox" id="shuffleQuiz" checked class="w-4 h-4 text-green-500 rounded border-gray-300 focus:ring-green-500">
+            <span class="text-sm text-gray-700">Trộn ngẫu nhiên</span>
+          </label>
+          
+          <!-- Start Button -->
+          <button onclick="startQuiz()" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+            Bắt đầu
+            <i data-lucide="play" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz In Progress -->
+      <div id="quizInProgress" class="hidden max-w-2xl mx-auto">
+        <!-- Progress Header -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-5 mb-6 shadow-sm">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl font-bold text-green-600" id="quizCurrentNum">1</span>
+              <span class="text-gray-400">/</span>
+              <span class="text-gray-500" id="quizTotalNum">10</span>
+            </div>
+            <div class="flex items-center gap-3 text-sm">
+              <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium" id="quizCorrectCount">✓ 0</span>
+              <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full font-medium" id="quizIncorrectCount">✗ 0</span>
+              <button onclick="endQuizEarly()" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full font-medium hover:bg-red-100 hover:text-red-600 transition flex items-center gap-1">
+                <i data-lucide="x" class="w-3 h-3"></i> Kết thúc
+              </button>
+            </div>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+            <div id="quizProgressBar" class="bg-gradient-to-r from-green-400 to-emerald-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+          <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 text-center">
+            <div class="flex items-center justify-center gap-3">
+              <div id="quizQuestion" class="text-3xl font-bold text-white drop-shadow-sm">Hello</div>
+              <button onclick="replayAudio()" id="btnSpeak" class="hidden w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition backdrop-blur-sm" title="Nghe lại">
+                <i data-lucide="volume-2" class="w-6 h-6 text-white"></i>
+              </button>
+            </div>
+            <div id="quizHintArea" class="text-white/70 text-sm mt-3"></div>
+          </div>
+          
+          <div class="p-6">
+            <input type="text" id="quizAnswer" 
+              class="w-full p-5 text-xl text-center border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
+              placeholder="Nhập đáp án của bạn..." onkeydown="handleQuizKeydown(event)" autocomplete="off">
+            <div id="quizResult" class="hidden mt-4 p-4 rounded-xl text-center font-medium"></div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="quizActions" class="flex gap-4 justify-center">
+          <button onclick="showHint()" id="btnHint" class="px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 font-medium transition-all flex items-center gap-2">
+            <span class="text-lg">💡</span> Gợi ý
+          </button>
+          <button onclick="checkQuizAnswer()" id="btnCheck" class="px-10 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+            Kiểm tra <i data-lucide="chevron-right" class="w-5 h-5"></i>
+          </button>
+          <button onclick="skipQuestion()" id="btnSkip" class="px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 font-medium transition-all flex items-center gap-2">
+            <span class="text-lg">⏭️</span> Bỏ qua
+          </button>
+        </div>
+        <div id="quizNextAction" class="hidden flex justify-center">
+          <button onclick="nextQuestion()" class="px-12 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 text-lg">
+            Câu tiếp theo <i data-lucide="arrow-right" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz Finished -->
+      <div id="quizFinished" class="hidden max-w-sm mx-auto">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-md overflow-hidden">
+          <!-- Trophy Header -->
+          <div class="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 p-4 text-center">
+            <div class="text-4xl mb-1">🏆</div>
+            <h1 class="text-xl font-bold text-white">Hoàn thành!</h1>
+          </div>
+          
+          <!-- Stats -->
+          <div class="p-4">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-green-50 p-3 rounded-lg border border-green-200 text-center">
+                <div id="finalCorrect" class="text-2xl font-bold text-green-600">0</div>
+                <div class="text-green-700 text-sm">Đúng</div>
+              </div>
+              <div class="bg-red-50 p-3 rounded-lg border border-red-200 text-center">
+                <div id="finalIncorrect" class="text-2xl font-bold text-red-600">0</div>
+                <div class="text-red-700 text-sm">Sai</div>
+              </div>
+            </div>
+            
+            <!-- Percentage -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-4 text-center">
+              <div class="text-xs text-gray-500 mb-1">Tỷ lệ chính xác</div>
+              <div id="finalPercentage" class="text-4xl font-bold text-green-600">0%</div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex gap-2">
+              <button onclick="resetQuiz()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-lg font-medium transition-all text-sm">
+                Làm lại
+              </button>
+              <button onclick="showPage('home')" class="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition-all text-sm">
+                Trang chủ
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT PAGE -->
+    <div id="page-export" class="page hidden">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
+          <i data-lucide="file-down" class="w-6 h-6 text-white"></i>
+        </div>
+        <h1 class="text-xl font-bold text-gray-900">Export / Print</h1>
+      </div>
+
+      <div class="bg-white rounded-xl border border-gray-200 p-6 max-w-xl mb-6 no-print">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Chọn bài học</label>
+            <select id="exportLessonSelect" class="w-full p-3 rounded-lg border border-gray-200 bg-white" onchange="loadExportData()"></select>
+          </div>
+          <div id="exportActions" class="hidden grid grid-cols-2 gap-3">
+            <button onclick="printExport()" class="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium">
+              <i data-lucide="printer" class="w-4 h-4"></i>
+              🖨️ Print
+            </button>
+            <button onclick="exportCSV()" class="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition">
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+              Export CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="exportPreview" class="hidden bg-white rounded-xl border border-gray-200 p-6">
+        <h2 id="exportTitle" class="text-xl font-bold text-gray-900 mb-4"></h2>
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="border border-gray-200 p-3 text-left font-medium text-gray-700">English</th>
+              <th class="border border-gray-200 p-3 text-left font-medium text-gray-700">Vietnamese</th>
+            </tr>
+          </thead>
+          <tbody id="exportTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ==================== DATA ====================
+    function getData() {
+      const data = localStorage.getItem('vocabAppData');
+      return data ? JSON.parse(data) : { lessons: [], vocabularies: [] };
+    }
+
+    function saveData(data) {
+      localStorage.setItem('vocabAppData', JSON.stringify(data));
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    // ==================== NAVIGATION ====================
+    let currentLessonId = null;
+
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      const pageEl = document.getElementById('page-' + page);
+      if (pageEl) pageEl.classList.remove('hidden');
+
+      if (page === 'home') renderHomeLessons();
+      if (page === 'quiz') loadQuizLessons();
+      if (page === 'export') loadExportLessons();
+    }
+
+    function showLessonDetail(lessonId) {
+      currentLessonId = lessonId;
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      document.getElementById('page-lesson-detail').classList.remove('hidden');
+      renderLessonDetail();
+      showTab('list');
+    }
+
+    function showTab(tab) {
+      ['list', 'import', 'export'].forEach(t => {
+        document.getElementById('tabContent-' + t).classList.add('hidden');
+        document.getElementById('tab-' + t).classList.remove('border-green-500', 'text-green-600');
+        document.getElementById('tab-' + t).classList.add('border-transparent', 'text-gray-500');
+      });
+      document.getElementById('tabContent-' + tab).classList.remove('hidden');
+      document.getElementById('tab-' + tab).classList.add('border-green-500', 'text-green-600');
+      document.getElementById('tab-' + tab).classList.remove('border-transparent', 'text-gray-500');
+      
+      if (tab === 'export') loadExportDetailData();
+    }
+
+    // ==================== HOME LESSONS ====================
+    // Lesson theme colors and icons
+    const lessonThemes = [
+      { bg: 'bg-green-100', text: 'text-green-600', btn: 'bg-green-500 hover:bg-green-600', border: 'border-green-500', icon: 'book-open' },
+      { bg: 'bg-blue-100', text: 'text-blue-600', btn: 'bg-blue-500 hover:bg-blue-600', border: 'border-blue-500', icon: 'globe' },
+      { bg: 'bg-purple-100', text: 'text-purple-600', btn: 'bg-purple-500 hover:bg-purple-600', border: 'border-purple-500', icon: 'briefcase' },
+      { bg: 'bg-orange-100', text: 'text-orange-600', btn: 'bg-orange-500 hover:bg-orange-600', border: 'border-orange-500', icon: 'plane' },
+      { bg: 'bg-pink-100', text: 'text-pink-600', btn: 'bg-pink-500 hover:bg-pink-600', border: 'border-pink-500', icon: 'heart' },
+      { bg: 'bg-teal-100', text: 'text-teal-600', btn: 'bg-teal-500 hover:bg-teal-600', border: 'border-teal-500', icon: 'coffee' },
+      { bg: 'bg-indigo-100', text: 'text-indigo-600', btn: 'bg-indigo-500 hover:bg-indigo-600', border: 'border-indigo-500', icon: 'graduation-cap' },
+      { bg: 'bg-rose-100', text: 'text-rose-600', btn: 'bg-rose-500 hover:bg-rose-600', border: 'border-rose-500', icon: 'music' },
+    ];
+    
+    function getLessonTheme(index) {
+      return lessonThemes[index % lessonThemes.length];
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function renderHomeLessons() {
+      const data = getData();
+      const searchEl = document.getElementById('homeSearchLesson');
+      const search = searchEl ? searchEl.value.toLowerCase() : '';
+      const filtered = data.lessons.filter(l => l.title.toLowerCase().includes(search));
+
+      const container = document.getElementById('homeLessonsList');
+      if (!container) return;
+      
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-2 text-center py-12">
+            <div class="text-4xl mb-4">📚</div>
+            <p class="text-gray-500 mb-4">Chưa có bài học nào</p>
+            <button onclick="createNewLesson()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition">
+              + Tạo bài học
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map((lesson, index) => {
+        const vocabCount = data.vocabularies.filter(v => v.lessonId === lesson.id).length;
+        const theme = getLessonTheme(index);
+        const dateStr = formatDate(lesson.createdAt);
+        return `
+          <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition cursor-pointer" onclick="showLessonDetail('${lesson.id}')">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl ${theme.bg} flex items-center justify-center flex-shrink-0">
+                <i data-lucide="${theme.icon}" class="w-6 h-6 ${theme.text}"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="font-bold text-gray-900 truncate">${lesson.title}</h3>
+                <div class="flex items-center gap-3 mt-1 text-sm text-gray-400">
+                  <span>${vocabCount} từ vựng</span>
+                  ${dateStr ? `<span>• ${dateStr}</span>` : ''}
+                </div>
+              </div>
+              <button onclick="event.stopPropagation(); deleteLesson('${lesson.id}')" class="text-gray-300 hover:text-red-500 p-2">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button onclick="event.stopPropagation(); showLessonDetail('${lesson.id}')" class="flex-1 ${theme.btn} text-white font-medium py-2.5 rounded-lg transition text-sm">
+                Học
+              </button>
+              <button onclick="event.stopPropagation(); startQuizForLesson('${lesson.id}')" class="flex-1 bg-white border ${theme.border} ${theme.text} font-medium py-2.5 rounded-lg hover:bg-gray-50 transition text-sm">
+                Quiz
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Re-initialize Lucide icons for dynamic content
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function showLessonForm(id = null) {
+      if (id) {
+        const data = getData();
+        const lesson = data.lessons.find(l => l.id === id);
+        if (lesson) {
+          document.getElementById('lessonFormTitle').textContent = 'Sửa bài học';
+          document.getElementById('editLessonId').value = id;
+          document.getElementById('lessonTitle').value = lesson.title;
+          document.getElementById('lessonDesc').value = lesson.description || '';
+        }
+      } else {
+        document.getElementById('lessonFormTitle').textContent = 'Tạo bài học mới';
+        document.getElementById('editLessonId').value = '';
+        document.getElementById('lessonTitle').value = '';
+        document.getElementById('lessonDesc').value = '';
+      }
+      document.getElementById('lessonFormModal').classList.remove('hidden');
+    }
+
+    function hideLessonForm() {
+      document.getElementById('lessonFormModal').classList.add('hidden');
+    }
+
+    function saveLesson() {
+      const title = document.getElementById('lessonTitle').value.trim();
+      if (!title) return alert('Nhập tên bài học');
+
+      const data = getData();
+      const editId = document.getElementById('editLessonId').value;
+      const description = document.getElementById('lessonDesc').value.trim();
+
+      if (editId) {
+        const lesson = data.lessons.find(l => l.id === editId);
+        if (lesson) {
+          lesson.title = title;
+          lesson.description = description;
+        }
+      } else {
+        data.lessons.push({
+          id: generateId(),
+          title: title,
+          description: description,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      saveData(data);
+      hideLessonForm();
+      renderHomeLessons();
+    }
+
+    function deleteLesson(id) {
+      if (!confirm('Xóa bài học này?')) return;
+      const data = getData();
+      data.lessons = data.lessons.filter(l => l.id !== id);
+      data.vocabularies = data.vocabularies.filter(v => v.lessonId !== id);
+      saveData(data);
+      renderHomeLessons();
+    }
+
+    // ==================== LESSON DETAIL ====================
+    function renderLessonDetail() {
+      const data = getData();
+      const lesson = data.lessons.find(l => l.id === currentLessonId);
+      if (!lesson) return;
+
+      document.getElementById('lessonDetailTitle').textContent = lesson.title;
+      document.getElementById('exportLessonTitle').textContent = 'Xuất bài: ' + lesson.title;
+      renderVocabList();
+    }
+
+    function renderVocabList() {
+      const data = getData();
+      const searchEl = document.getElementById('searchVocab');
+      const search = searchEl ? searchEl.value.toLowerCase() : '';
+      const vocabs = data.vocabularies
+        .filter(v => v.lessonId === currentLessonId)
+        .filter(v => v.english.toLowerCase().includes(search) || v.vietnamese.toLowerCase().includes(search));
+
+      const tbody = document.getElementById('vocabTableBody');
+      if (vocabs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">Chưa có từ vựng</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = vocabs.map((v, i) => `
+        <tr class="hover:bg-gray-50">
+          <td class="p-3"><span class="w-6 h-6 rounded bg-green-100 text-green-600 flex items-center justify-center"><i data-lucide="check" class="w-3 h-3"></i></span></td>
+          <td class="p-3 font-medium text-gray-900">${v.english}</td>
+          <td class="p-3 text-gray-600">${v.vietnamese}</td>
+          <td class="p-3 text-gray-400 text-sm hidden lg:table-cell">${v.ipa || '-'}</td>
+          <td class="p-3 text-gray-400 text-sm hidden md:table-cell">${v.pos || '-'}</td>
+          <td class="p-3 text-gray-400 text-sm hidden xl:table-cell">${v.example || '-'}</td>
+          <td class="p-3 text-right no-print">
+            <button onclick="editVocab('${v.id}')" class="text-gray-400 hover:text-green-600 p-1"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+            <button onclick="deleteVocab('${v.id}')" class="text-gray-400 hover:text-red-500 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      
+      // Re-initialize Lucide icons for dynamic content
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function showVocabForm() {
+      document.getElementById('vocabFormTitle').textContent = 'Thêm từ vựng mới';
+      document.getElementById('editVocabId').value = '';
+      document.getElementById('vocabEnglish').value = '';
+      document.getElementById('vocabVietnamese').value = '';
+      document.getElementById('vocabIpa').value = '';
+      document.getElementById('vocabPos').value = '';
+      document.getElementById('vocabExample').value = '';
+      hideDictResults();
+      document.getElementById('vocabFormModal').classList.remove('hidden');
+    }
+
+    function hideVocabForm() {
+      document.getElementById('vocabFormModal').classList.add('hidden');
+      hideDictResults();
+    }
+
+    // ==================== DICTIONARY LOOKUP ====================
+    let currentDictData = null;
+
+    async function lookupWord() {
+      const word = document.getElementById('vocabEnglish').value.trim().toLowerCase();
+      if (!word) {
+        alert('Vui lòng nhập từ tiếng Anh để tra cứu');
+        return;
+      }
+
+      const panel = document.getElementById('dictResultsPanel');
+      const loading = document.getElementById('dictLoading');
+      const content = document.getElementById('dictContent');
+
+      panel.classList.remove('hidden');
+      loading.classList.remove('hidden');
+      content.classList.add('hidden');
+
+      try {
+        // Gọi cả Free Dictionary API và MW Thesaurus API song song
+        const [freeDictResponse, thesaurusData] = await Promise.all([
+          fetch(`${FREE_DICT_API_URL}/${encodeURIComponent(word)}`),
+          fetchThesaurus(word)
+        ]);
+        
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+
+        let freeDictData = null;
+        if (freeDictResponse.ok) {
+          freeDictData = await freeDictResponse.json();
+        }
+
+        if (!freeDictData && !thesaurusData) {
+          showDictError('Không tìm thấy từ này trong từ điển');
+          return;
+        }
+
+        currentDictData = freeDictData ? freeDictData[0] : null;
+        displayCombinedResults(currentDictData, thesaurusData, word);
+
+      } catch (error) {
+        console.error('Dictionary lookup error:', error);
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+        showDictError('Lỗi khi tra từ điển. Vui lòng thử lại.');
+      }
+    }
+
+    async function fetchThesaurus(word) {
+      try {
+        const url = `${MW_THESAURUS_URL}/${encodeURIComponent(word)}?key=${MW_THESAURUS_KEY}`;
+        const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
+        
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        if (!data || data.length === 0 || typeof data[0] === 'string') return null;
+        
+        return data;
+      } catch (error) {
+        console.error('Thesaurus API error:', error);
+        return null;
+      }
+    }
+
+    async function translateToVietnamese(text) {
+      try {
+        const response = await fetch(`${TRANSLATE_API_URL}?q=${encodeURIComponent(text)}&langpair=en|vi`);
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        if (data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
+          return data.responseData.translatedText;
+        }
+        return null;
+      } catch (error) {
+        console.error('Translation error:', error);
+        return null;
+      }
+    }
+
+    async function displayCombinedResults(freeDictEntry, thesaurusData, word) {
+      // Basic info (IPA, POS)
+      let basicInfoHtml = '';
+      let ipa = '';
+      let audioUrl = '';
+      let pos = '';
+      
+      // Get data from Free Dictionary
+      if (freeDictEntry) {
+        if (freeDictEntry.phonetics && freeDictEntry.phonetics.length > 0) {
+          for (const phonetic of freeDictEntry.phonetics) {
+            if (phonetic.text && !ipa) {
+              ipa = phonetic.text.replace(/\//g, '');
+            }
+            if (phonetic.audio && !audioUrl) {
+              audioUrl = phonetic.audio;
+            }
+          }
+        }
+        if (freeDictEntry.meanings && freeDictEntry.meanings.length > 0) {
+          pos = freeDictEntry.meanings[0].partOfSpeech || '';
+        }
+      }
+      
+      // Get POS from thesaurus if not available
+      if (!pos && thesaurusData && thesaurusData[0]) {
+        pos = thesaurusData[0].fl || '';
+      }
+      
+      if (ipa) {
+        basicInfoHtml += `<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-mono">/${ipa}/</span>`;
+      }
+      if (pos) {
+        basicInfoHtml += `<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">${pos}</span>`;
+      }
+      if (audioUrl) {
+        basicInfoHtml += `<button onclick="playDictAudio('${audioUrl}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition">🔊 Nghe phát âm</button>`;
+      }
+
+      document.getElementById('dictBasicInfo').innerHTML = basicInfoHtml;
+
+      // Vietnamese Translation - translate the word and first definition
+      let vietnameseHtml = '<div class="flex items-center gap-2"><div class="animate-pulse w-4 h-4 bg-yellow-300 rounded-full"></div><span class="text-yellow-700">Đang dịch...</span></div>';
+      document.getElementById('dictVietnamese').innerHTML = vietnameseHtml;
+      
+      // Get first definition to translate
+      let firstDefinition = '';
+      if (freeDictEntry && freeDictEntry.meanings && freeDictEntry.meanings.length > 0) {
+        const firstMeaning = freeDictEntry.meanings[0];
+        if (firstMeaning.definitions && firstMeaning.definitions.length > 0) {
+          firstDefinition = firstMeaning.definitions[0].definition;
+        }
+      }
+
+      // Translate word and definition in parallel
+      translateToVietnamese(word).then(wordTranslation => {
+        translateToVietnamese(firstDefinition).then(defTranslation => {
+          let vnHtml = `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">🇻🇳</span>
+                <span class="font-bold text-yellow-800 text-xl">${wordTranslation || word}</span>
+              </div>
+              <button onclick="applyVietnamese('${(wordTranslation || '').replace(/'/g, "\\'")}')" class="text-xs px-3 py-1.5 bg-yellow-400 text-yellow-900 rounded-full hover:bg-yellow-500 transition font-medium shadow-sm">
+                ✓ Áp dụng
+              </button>
+            </div>`;
+          if (defTranslation) {
+            vnHtml += `<p class="text-yellow-700 text-sm mt-2 pl-9 italic">${defTranslation}</p>`;
+          }
+          document.getElementById('dictVietnamese').innerHTML = vnHtml;
+        });
+      });
+
+      // Definitions and Examples from Free Dictionary
+      let definitionHtml = '';
+      let examplesHtml = '';
+      const examples = [];
+      let synonyms = [];
+      let antonyms = [];
+
+      if (freeDictEntry && freeDictEntry.meanings && freeDictEntry.meanings.length > 0) {
+        definitionHtml = '<ul class="space-y-2">';
+        
+        let defCount = 0;
+        freeDictEntry.meanings.forEach(meaning => {
+          const partOfSpeech = meaning.partOfSpeech;
+          
+          if (meaning.definitions && meaning.definitions.length > 0) {
+            meaning.definitions.slice(0, 2).forEach(def => {
+              if (defCount < 4) {
+                definitionHtml += `<li class="flex gap-2">
+                  <span class="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium h-fit">${partOfSpeech}</span>
+                  <span class="text-gray-700">${def.definition}</span>
+                </li>`;
+                defCount++;
+              }
+              if (def.example) {
+                examples.push(def.example);
+              }
+            });
+          }
+          
+          if (meaning.synonyms) synonyms.push(...meaning.synonyms);
+          if (meaning.antonyms) antonyms.push(...meaning.antonyms);
+        });
+        
+        definitionHtml += '</ul>';
+      }
+      document.getElementById('dictDefinition').innerHTML = definitionHtml || '<p class="text-gray-400 italic">Không có định nghĩa</p>';
+
+      // Examples
+      if (examples.length > 0) {
+        examples.slice(0, 2).forEach(ex => {
+          examplesHtml += `<p class="text-gray-600 italic text-sm pl-3 border-l-2 border-green-400 py-1">"${ex}"</p>`;
+        });
+      } else {
+        examplesHtml = '<p class="text-gray-400 italic text-sm">Không có ví dụ</p>';
+      }
+      document.getElementById('dictExamples').innerHTML = examplesHtml;
+
+      // Get synonyms/antonyms from MW Thesaurus
+      if (thesaurusData && thesaurusData.length > 0) {
+        thesaurusData.forEach(entry => {
+          if (entry.meta && entry.meta.syns) {
+            entry.meta.syns.forEach(synGroup => {
+              synonyms.push(...synGroup);
+            });
+          }
+          if (entry.meta && entry.meta.ants) {
+            entry.meta.ants.forEach(antGroup => {
+              antonyms.push(...antGroup);
+            });
+          }
+        });
+      }
+
+      // Related words (synonyms & antonyms) - limited display
+      let relatedHtml = '';
+      const uniqueSynonyms = [...new Set(synonyms)].slice(0, 6);
+      const uniqueAntonyms = [...new Set(antonyms)].slice(0, 4);
+      
+      if (uniqueSynonyms.length > 0) {
+        relatedHtml += `<div class="mb-3">
+          <div class="text-xs text-gray-500 mb-1.5 font-medium">Đồng nghĩa</div>
+          <div class="flex flex-wrap gap-1.5">`;
+        uniqueSynonyms.forEach(syn => {
+          relatedHtml += `<button onclick="applyWord('${syn}')" class="px-2 py-0.5 bg-green-50 text-green-600 border border-green-200 rounded-full text-xs hover:bg-green-100 transition">${syn}</button>`;
+        });
+        relatedHtml += '</div></div>';
+      }
+      if (uniqueAntonyms.length > 0) {
+        relatedHtml += `<div>
+          <div class="text-xs text-gray-500 mb-1.5 font-medium">Trái nghĩa</div>
+          <div class="flex flex-wrap gap-1.5">`;
+        uniqueAntonyms.forEach(ant => {
+          relatedHtml += `<button onclick="applyWord('${ant}')" class="px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs hover:bg-red-100 transition">${ant}</button>`;
+        });
+        relatedHtml += '</div></div>';
+      }
+      if (!relatedHtml) {
+        relatedHtml = '<p class="text-gray-400 italic text-sm">Không có từ liên quan</p>';
+      }
+      document.getElementById('dictRelatedWords').innerHTML = relatedHtml;
+
+      // Action buttons - cleaner design
+      const firstExample = examples.length > 0 ? examples[0].replace(/'/g, "\\'") : '';
+      let actionsHtml = `
+        <button onclick="applyIpa('${ipa}')" class="px-3 py-1.5 bg-purple-500 text-white rounded-full text-xs font-medium hover:bg-purple-600 transition shadow-sm flex items-center gap-1" ${!ipa ? 'disabled style="opacity:0.4"' : ''}>
+          <span>📝</span> IPA
+        </button>
+        <button onclick="applyPos('${pos}')" class="px-3 py-1.5 bg-green-500 text-white rounded-full text-xs font-medium hover:bg-green-600 transition shadow-sm flex items-center gap-1" ${!pos ? 'disabled style="opacity:0.4"' : ''}>
+          <span>🏷️</span> POS
+        </button>
+      `;
+      if (firstExample) {
+        actionsHtml += `<button onclick="applyExample('${firstExample}')" class="px-3 py-1.5 bg-blue-500 text-white rounded-full text-xs font-medium hover:bg-blue-600 transition shadow-sm flex items-center gap-1">
+          <span>💬</span> Ví dụ
+        </button>`;
+      }
+      actionsHtml += `<button onclick="applyAll('${ipa}', '${pos}', '${firstExample}')" class="px-4 py-1.5 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-full text-xs font-medium hover:from-gray-800 hover:to-black transition shadow-sm flex items-center gap-1">
+        <span>✨</span> Áp dụng tất cả
+      </button>`;
+      
+      document.getElementById('dictActions').innerHTML = actionsHtml;
+    }
+
+    function showDictError(message) {
+      document.getElementById('dictBasicInfo').innerHTML = '';
+      document.getElementById('dictVietnamese').innerHTML = '';
+      document.getElementById('dictVietnamese').classList.add('hidden');
+      document.getElementById('dictDefinition').innerHTML = `<p class="text-red-500 text-sm">${message}</p>`;
+      document.getElementById('dictExamples').innerHTML = '';
+      document.getElementById('dictRelatedWords').innerHTML = '';
+      document.getElementById('dictActions').innerHTML = '';
+    }
+
+    function showDictSuggestions(suggestions) {
+      document.getElementById('dictBasicInfo').innerHTML = '<span class="text-blue-700 font-medium">Gợi ý từ tương tự:</span>';
+      document.getElementById('dictVietnamese').innerHTML = '';
+      document.getElementById('dictVietnamese').classList.add('hidden');
+      document.getElementById('dictDefinition').innerHTML = '';
+      document.getElementById('dictExamples').innerHTML = '';
+      document.getElementById('dictRelatedWords').innerHTML = suggestions.slice(0, 10).map(s => 
+        `<button onclick="applyWord('${s}')" class="px-3 py-1 bg-white border border-blue-300 rounded-full text-blue-700 text-sm hover:bg-blue-100 transition">${s}</button>`
+      ).join('');
+      document.getElementById('dictActions').innerHTML = '';
+    }
+
+    function applyVietnamese(text) {
+      if (text) document.getElementById('vocabVietnamese').value = text;
+    }
+
+    function displayFreeDictResults(entry) {
+      // Basic info (IPA, POS)
+      let basicInfoHtml = '';
+      
+      // Get IPA from phonetics
+      let ipa = '';
+      let audioUrl = '';
+      if (entry.phonetics && entry.phonetics.length > 0) {
+        for (const phonetic of entry.phonetics) {
+          if (phonetic.text && !ipa) {
+            ipa = phonetic.text.replace(/\//g, '');
+          }
+          if (phonetic.audio && !audioUrl) {
+            audioUrl = phonetic.audio;
+          }
+        }
+      }
+      
+      if (ipa) {
+        basicInfoHtml += `<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-mono">/${ipa}/</span>`;
+      }
+      
+      // Get POS from first meaning
+      let pos = '';
+      if (entry.meanings && entry.meanings.length > 0) {
+        pos = entry.meanings[0].partOfSpeech || '';
+        if (pos) {
+          basicInfoHtml += `<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">${pos}</span>`;
+        }
+      }
+
+      // Audio button
+      if (audioUrl) {
+        basicInfoHtml += `<button onclick="playDictAudio('${audioUrl}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition">🔊 Nghe phát âm</button>`;
+      }
+
+      document.getElementById('dictBasicInfo').innerHTML = basicInfoHtml;
+
+      // Definitions and Examples
+      let definitionHtml = '';
+      let examplesHtml = '';
+      const examples = [];
+      const synonyms = [];
+      const antonyms = [];
+
+      if (entry.meanings && entry.meanings.length > 0) {
+        definitionHtml = '<div class="font-medium text-gray-800 mb-1">Định nghĩa:</div><ul class="list-disc list-inside space-y-1">';
+        
+        entry.meanings.forEach(meaning => {
+          const partOfSpeech = meaning.partOfSpeech;
+          
+          if (meaning.definitions && meaning.definitions.length > 0) {
+            meaning.definitions.slice(0, 3).forEach(def => {
+              definitionHtml += `<li class="text-gray-700"><span class="text-green-600 text-xs">(${partOfSpeech})</span> ${def.definition}</li>`;
+              if (def.example) {
+                examples.push(def.example);
+              }
+            });
+          }
+          
+          // Collect synonyms and antonyms
+          if (meaning.synonyms) synonyms.push(...meaning.synonyms);
+          if (meaning.antonyms) antonyms.push(...meaning.antonyms);
+        });
+        
+        definitionHtml += '</ul>';
+      }
+      document.getElementById('dictDefinition').innerHTML = definitionHtml;
+
+      // Examples
+      if (examples.length > 0) {
+        examplesHtml = '<div class="font-medium text-gray-800 mb-1">Ví dụ:</div>';
+        examples.slice(0, 3).forEach(ex => {
+          examplesHtml += `<p class="text-gray-600 italic text-sm pl-3 border-l-2 border-green-300">"${ex}"</p>`;
+        });
+      }
+      document.getElementById('dictExamples').innerHTML = examplesHtml;
+
+      // Related words (synonyms & antonyms)
+      let relatedHtml = '';
+      if (synonyms.length > 0) {
+        relatedHtml += '<div class="font-medium text-gray-800 mb-1">Từ đồng nghĩa:</div><div class="flex flex-wrap gap-2 mb-2">';
+        [...new Set(synonyms)].slice(0, 8).forEach(syn => {
+          relatedHtml += `<button onclick="applyWord('${syn}')" class="px-2 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition">${syn}</button>`;
+        });
+        relatedHtml += '</div>';
+      }
+      if (antonyms.length > 0) {
+        relatedHtml += '<div class="font-medium text-gray-800 mb-1">Từ trái nghĩa:</div><div class="flex flex-wrap gap-2">';
+        [...new Set(antonyms)].slice(0, 8).forEach(ant => {
+          relatedHtml += `<button onclick="applyWord('${ant}')" class="px-2 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition">${ant}</button>`;
+        });
+        relatedHtml += '</div>';
+      }
+      document.getElementById('dictRelatedWords').innerHTML = relatedHtml;
+
+      // Action buttons
+      let actionsHtml = `
+        <button onclick="applyIpa('${ipa}')" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600 transition" ${!ipa ? 'disabled class="opacity-50"' : ''}>
+          Áp dụng IPA
+        </button>
+        <button onclick="applyPos('${pos}')" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition" ${!pos ? 'disabled class="opacity-50"' : ''}>
+          Áp dụng POS
+        </button>
+     
+      `;
+      if (examples.length > 0) {
+        actionsHtml += `<button onclick="applyExample('${examples[0].replace(/'/g, "\\'")}')" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition">
+          Áp dụng ví dụ
+        </button>`;
+      }
+      actionsHtml += `<button onclick="applyAll('${ipa}', '${pos}', '${examples[0] ? examples[0].replace(/'/g, "\\'") : ''}')" class="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm hover:bg-gray-900 transition">
+        Áp dụng tất cả
+      </button>`;
+      
+      document.getElementById('dictActions').innerHTML = actionsHtml;
+    }
+
+    function displayDictResults(entry, allEntries) {
+      // Basic info (IPA, POS)
+      let basicInfoHtml = '';
+      
+      // Get IPA
+      const ipa = entry.hwi?.prs?.[0]?.ipa || '';
+      if (ipa) {
+        basicInfoHtml += `<span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-mono">/${ipa}/</span>`;
+      }
+      
+      // Get POS
+      const pos = entry.fl || '';
+      if (pos) {
+        basicInfoHtml += `<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">${pos}</span>`;
+      }
+
+      // Audio button
+      const audioFile = entry.hwi?.prs?.[0]?.sound?.audio;
+      if (audioFile) {
+        const subdirectory = audioFile.startsWith('bix') ? 'bix' : audioFile.startsWith('gg') ? 'gg' : audioFile.charAt(0);
+        const audioUrl = `https://media.merriam-webster.com/audio/prons/en/us/mp3/${subdirectory}/${audioFile}.mp3`;
+        basicInfoHtml += `<button onclick="playDictAudio('${audioUrl}')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition">🔊 Nghe phát âm</button>`;
+      }
+
+      document.getElementById('dictBasicInfo').innerHTML = basicInfoHtml;
+
+      // Definition
+      let definitionHtml = '';
+      const shortDef = entry.shortdef || [];
+      if (shortDef.length > 0) {
+        definitionHtml = '<div class="font-medium text-gray-800 mb-1">Định nghĩa:</div><ul class="list-disc list-inside space-y-1">';
+        shortDef.forEach(def => {
+          definitionHtml += `<li class="text-gray-700">${def}</li>`;
+        });
+        definitionHtml += '</ul>';
+      }
+      document.getElementById('dictDefinition').innerHTML = definitionHtml;
+
+      // Examples
+      let examplesHtml = '';
+      const examples = extractExamples(entry);
+      if (examples.length > 0) {
+        examplesHtml = '<div class="font-medium text-gray-800 mb-1">Ví dụ:</div>';
+        examples.slice(0, 3).forEach(ex => {
+          examplesHtml += `<p class="text-gray-600 italic text-sm pl-3 border-l-2 border-green-300">"${ex}"</p>`;
+        });
+      }
+      document.getElementById('dictExamples').innerHTML = examplesHtml;
+
+      // Related words / stems
+      const stems = entry.meta?.stems || [];
+      let relatedHtml = '';
+      if (stems.length > 1) {
+        relatedHtml = '<div class="font-medium text-gray-800 mb-1">Các dạng liên quan:</div><div class="flex flex-wrap gap-2">';
+        stems.slice(0, 8).forEach(stem => {
+          relatedHtml += `<span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm">${stem}</span>`;
+        });
+        relatedHtml += '</div>';
+      }
+      document.getElementById('dictRelatedWords').innerHTML = relatedHtml;
+
+      // Action buttons
+      let actionsHtml = `
+        <button onclick="applyIpa('${ipa}')" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600 transition" ${!ipa ? 'disabled class="opacity-50"' : ''}>
+          Áp dụng IPA
+        </button>
+        <button onclick="applyPos('${pos}')" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition" ${!pos ? 'disabled class="opacity-50"' : ''}>
+          Áp dụng POS
+        </button>
+      `;
+      if (examples.length > 0) {
+        actionsHtml += `<button onclick="applyExample('${examples[0].replace(/'/g, "\\'")}')" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition">
+          Áp dụng ví dụ
+        </button>`;
+      }
+      actionsHtml += `<button onclick="applyAll('${ipa}', '${pos}', '${examples[0] ? examples[0].replace(/'/g, "\\'") : ''}')" class="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm hover:bg-gray-900 transition">
+        Áp dụng tất cả
+      </button>`;
+      
+      document.getElementById('dictActions').innerHTML = actionsHtml;
+    }
+
+    function extractExamples(entry) {
+      const examples = [];
+      try {
+        const def = entry.def;
+        if (def && def[0] && def[0].sseq) {
+          def[0].sseq.forEach(sense => {
+            sense.forEach(item => {
+              if (item[0] === 'sense' && item[1] && item[1].dt) {
+                item[1].dt.forEach(dtItem => {
+                  if (dtItem[0] === 'vis') {
+                    dtItem[1].forEach(visItem => {
+                      if (visItem.t) {
+                        // Clean up the example text
+                        let text = visItem.t
+                          .replace(/\{it\}/g, '')
+                          .replace(/\{\/it\}/g, '')
+                          .replace(/\{bc\}/g, '')
+                          .replace(/\{ldquo\}/g, '"')
+                          .replace(/\{rdquo\}/g, '"');
+                        examples.push(text);
+                      }
+                    });
+                  }
+                });
+              }
+            });
+          });
+        }
+      } catch (e) {
+        console.error('Error extracting examples:', e);
+      }
+      return examples;
+    }
+
+    function playDictAudio(url) {
+      const audio = new Audio(url);
+      audio.play();
+    }
+
+    function applyWord(word) {
+      document.getElementById('vocabEnglish').value = word;
+      lookupWord();
+    }
+
+    function applyIpa(ipa) {
+      if (ipa) document.getElementById('vocabIpa').value = ipa;
+    }
+
+    function applyPos(pos) {
+      if (!pos) return;
+      const posMap = {
+        'noun': 'noun',
+        'verb': 'verb',
+        'adjective': 'adj',
+        'adverb': 'adv',
+        'phrase': 'phrase'
+      };
+      document.getElementById('vocabPos').value = posMap[pos.toLowerCase()] || pos;
+    }
+
+    function applyExample(example) {
+      if (example) document.getElementById('vocabExample').value = example;
+    }
+
+    function applyAll(ipa, pos, example) {
+      applyIpa(ipa);
+      applyPos(pos);
+      applyExample(example);
+    }
+
+    function hideDictResults() {
+      document.getElementById('dictResultsPanel').classList.add('hidden');
+      currentDictData = null;
+    }
+
+    function saveVocab() {
+      const english = document.getElementById('vocabEnglish').value.trim();
+      const vietnamese = document.getElementById('vocabVietnamese').value.trim();
+      if (!english || !vietnamese) return alert('Nhập English và Vietnamese');
+
+      const data = getData();
+      const editId = document.getElementById('editVocabId').value;
+
+      const vocabData = {
+        english,
+        vietnamese,
+        ipa: document.getElementById('vocabIpa').value.trim(),
+        pos: document.getElementById('vocabPos').value,
+        example: document.getElementById('vocabExample').value.trim()
+      };
+
+      if (editId) {
+        const vocab = data.vocabularies.find(v => v.id === editId);
+        if (vocab) Object.assign(vocab, vocabData);
+      } else {
+        data.vocabularies.push({
+          id: generateId(),
+          lessonId: currentLessonId,
+          ...vocabData,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      saveData(data);
+      hideVocabForm();
+      renderVocabList();
+    }
+
+    function editVocab(id) {
+      const data = getData();
+      const vocab = data.vocabularies.find(v => v.id === id);
+      if (!vocab) return;
+
+      document.getElementById('vocabFormTitle').textContent = 'Sửa từ vựng';
+      document.getElementById('editVocabId').value = id;
+      document.getElementById('vocabEnglish').value = vocab.english;
+      document.getElementById('vocabVietnamese').value = vocab.vietnamese;
+      document.getElementById('vocabIpa').value = vocab.ipa || '';
+      document.getElementById('vocabPos').value = vocab.pos || '';
+      document.getElementById('vocabExample').value = vocab.example || '';
+      document.getElementById('vocabFormModal').classList.remove('hidden');
+    }
+
+    function deleteVocab(id) {
+      if (!confirm('Xóa từ này?')) return;
+      const data = getData();
+      data.vocabularies = data.vocabularies.filter(v => v.id !== id);
+      saveData(data);
+      renderVocabList();
+    }
+
+    function importVocab() {
+      const text = document.getElementById('importData').value.trim();
+      if (!text) return alert('Nhập dữ liệu');
+
+      const data = getData();
+      const lines = text.split('\n').filter(l => l.trim());
+      let count = 0;
+
+      lines.forEach(line => {
+        const parts = line.split('|').map(p => p.trim());
+        if (parts.length >= 2) {
+          data.vocabularies.push({
+            id: generateId(),
+            lessonId: currentLessonId,
+            english: parts[0],
+            vietnamese: parts[1],
+            ipa: parts[2] || '',
+            pos: parts[3] || '',
+            example: parts[4] || '',
+            createdAt: new Date().toISOString()
+          });
+          count++;
+        }
+      });
+
+      saveData(data);
+      document.getElementById('importData').value = '';
+      showTab('list');
+      renderVocabList();
+      alert(`Đã import ${count} từ`);
+    }
+
+    function loadExportDetailData() {
+      const data = getData();
+      const vocabs = data.vocabularies.filter(v => v.lessonId === currentLessonId);
+      const tbody = document.getElementById('exportDetailTableBody');
+      tbody.innerHTML = vocabs.map(v => `
+        <tr>
+          <td class="border border-gray-200 p-3">${v.english}</td>
+          <td class="border border-gray-200 p-3">${v.vietnamese}</td>
+        </tr>
+      `).join('');
+    }
+
+    function printExportDetail() {
+      window.print();
+    }
+
+    function exportCSVDetail() {
+      const data = getData();
+      const lesson = data.lessons.find(l => l.id === currentLessonId);
+      const vocabs = data.vocabularies.filter(v => v.lessonId === currentLessonId);
+      
+      const csv = '\ufeff' + 'English,Vietnamese,IPA,POS,Example\n' + 
+        vocabs.map(v => `"${v.english}","${v.vietnamese}","${v.ipa || ''}","${v.pos || ''}","${v.example || ''}"`).join('\n');
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${lesson.title}.csv`;
+      link.click();
+    }
+
+    // ==================== TEXT-TO-SPEECH ====================
+    const SPEECHIFY_API_KEY = 'jTD94ihAzz10BYnD8wnTVjMMrfGNc62Joti_uhP79sk=';
+    const SPEECHIFY_API_URL = 'https://api.sws.speechify.com/v1/audio/speech';
+    
+    // Google AI Studio - Gemini API for Image Generation
+    const GEMINI_API_KEY = 'AIzaSyCkL39hT4ThJkml6dPxqxsSzChGYuJ25Uk';
+    const GEMINI_IMAGE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+    
+    // Merriam-Webster Learner's Dictionary API (backup - có CORS issue)
+    const MW_API_KEY = '376109dc-70c9-4dfc-9f91-412693751b47';
+    const MW_API_URL = 'https://www.dictionaryapi.com/api/v3/references/learners/json';
+    
+    // Merriam-Webster Thesaurus API (synonyms/antonyms)
+    const MW_THESAURUS_KEY = '2c8cc6e6-49fb-491e-a99c-bb0b676da733';
+    const MW_THESAURUS_URL = 'https://www.dictionaryapi.com/api/v3/references/thesaurus/json';
+    
+    // Free Dictionary API (primary - không cần key, hỗ trợ CORS)
+    const FREE_DICT_API_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en';
+    
+    // CORS Proxy để gọi MW API từ browser
+    const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+    
+    // MyMemory Translation API (miễn phí)
+    const TRANSLATE_API_URL = 'https://api.mymemory.translated.net/get';
+    let currentAudio = null;
+
+    async function speakText(text) {
+      try {
+        // Stop any currently playing audio
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio = null;
+        }
+
+        const response = await fetch(SPEECHIFY_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SPEECHIFY_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            input: text,
+            voice_id: 'george',
+            audio_format: 'mp3',
+            language: 'en-US',
+            model: 'simba-english'
+          })
+        });
+
+        if (!response.ok) {
+          console.error('TTS API error:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+        
+        if (data.audio_data) {
+          const audioBlob = base64ToBlob(data.audio_data, 'audio/mp3');
+          const audioUrl = URL.createObjectURL(audioBlob);
+          currentAudio = new Audio(audioUrl);
+          currentAudio.play();
+        }
+      } catch (error) {
+        console.error('TTS error:', error);
+      }
+    }
+
+    function base64ToBlob(base64, mimeType) {
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      return new Blob([byteArray], { type: mimeType });
+    }
+
+    function replayAudio() {
+      const vocab = quizVocabs[quizIndex];
+      if (vocab) {
+        speakText(vocab.english);
+      }
+    }
+
+    // ==================== QUIZ ====================
+    let quizMode = 'en-to-vi';
+    let quizVocabs = [];
+    let quizIndex = 0;
+    let quizCorrect = 0;
+    let quizIncorrect = 0;
+    let quizAnswered = false;
+
+    function loadQuizLessons() {
+      const data = getData();
+      const select = document.getElementById('quizLessonSelect');
+      select.innerHTML = '<option value="">-- Chọn --</option>' + 
+        data.lessons.map(l => `<option value="${l.id}">${l.title}</option>`).join('');
+    }
+
+    function setQuizMode(mode) {
+      quizMode = mode;
+      document.getElementById('modeEnVi').classList.toggle('border-green-500', mode === 'en-to-vi');
+      document.getElementById('modeEnVi').classList.toggle('bg-green-50', mode === 'en-to-vi');
+      document.getElementById('modeEnVi').classList.toggle('border-gray-200', mode !== 'en-to-vi');
+      document.getElementById('modeEnVi').classList.toggle('from-green-50', mode === 'en-to-vi');
+      document.getElementById('modeEnVi').classList.toggle('to-emerald-50', mode === 'en-to-vi');
+      document.getElementById('modeViEn').classList.toggle('border-green-500', mode === 'vi-to-en');
+      document.getElementById('modeViEn').classList.toggle('bg-gradient-to-br', mode === 'vi-to-en');
+      document.getElementById('modeViEn').classList.toggle('from-green-50', mode === 'vi-to-en');
+      document.getElementById('modeViEn').classList.toggle('to-emerald-50', mode === 'vi-to-en');
+      document.getElementById('modeViEn').classList.toggle('border-gray-200', mode !== 'vi-to-en');
+      document.getElementById('modeViEn').classList.toggle('bg-white', mode !== 'vi-to-en');
+      
+      // Toggle checkmarks
+      const enViCheck = document.getElementById('modeEnVi').querySelector('.absolute');
+      const viEnCheck = document.getElementById('modeViEnCheck');
+      if (enViCheck) enViCheck.classList.toggle('hidden', mode !== 'en-to-vi');
+      if (viEnCheck) viEnCheck.classList.toggle('hidden', mode !== 'vi-to-en');
+      if (viEnCheck) viEnCheck.classList.toggle('flex', mode === 'vi-to-en');
+    }
+
+    function startQuizForLesson(lessonId) {
+      currentLessonId = lessonId;
+      showPage('quiz');
+      loadQuizLessons();
+      document.getElementById('quizLessonSelect').value = lessonId;
+    }
+
+    function startQuiz() {
+      const lessonId = document.getElementById('quizLessonSelect').value;
+      if (!lessonId) return alert('Chọn bài học');
+
+      const data = getData();
+      quizVocabs = data.vocabularies.filter(v => v.lessonId === lessonId);
+      if (quizVocabs.length === 0) return alert('Bài học chưa có từ vựng');
+
+      if (document.getElementById('shuffleQuiz').checked) {
+        quizVocabs = quizVocabs.sort(() => Math.random() - 0.5);
+      }
+
+      quizIndex = 0;
+      quizCorrect = 0;
+      quizIncorrect = 0;
+
+      document.getElementById('quizSetup').classList.add('hidden');
+      document.getElementById('quizInProgress').classList.remove('hidden');
+      document.getElementById('quizFinished').classList.add('hidden');
+      
+      showQuestion();
+    }
+
+    function showQuestion() {
+      if (quizIndex >= quizVocabs.length) {
+        finishQuiz();
+        return;
+      }
+
+      const vocab = quizVocabs[quizIndex];
+      const question = quizMode === 'en-to-vi' ? vocab.english : vocab.vietnamese;
+      
+      document.getElementById('quizCurrentNum').textContent = quizIndex + 1;
+      document.getElementById('quizTotalNum').textContent = quizVocabs.length;
+      document.getElementById('quizProgressBar').style.width = ((quizIndex / quizVocabs.length) * 100) + '%';
+      document.getElementById('quizQuestion').textContent = question;
+      document.getElementById('quizHintArea').textContent = '';
+      document.getElementById('quizAnswer').value = '';
+      document.getElementById('quizAnswer').className = 'w-full p-5 text-xl text-center border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all';
+      document.getElementById('quizResult').classList.add('hidden');
+      document.getElementById('quizActions').classList.remove('hidden');
+      document.getElementById('quizNextAction').classList.add('hidden');
+      document.getElementById('quizAnswer').focus();
+      quizAnswered = false;
+      
+      // Update score counters
+      document.getElementById('quizCorrectCount').textContent = '✓ ' + quizCorrect;
+      document.getElementById('quizIncorrectCount').textContent = '✗ ' + quizIncorrect;
+
+      // Show speaker button and speak English word in both modes
+      const btnSpeak = document.getElementById('btnSpeak');
+      btnSpeak.classList.remove('hidden');
+      speakText(vocab.english);
+    }
+
+    function handleQuizKeydown(e) {
+      if (e.key === 'Enter') {
+        if (quizAnswered) {
+          nextQuestion();
+        } else {
+          checkQuizAnswer();
+        }
+      }
+    }
+
+    function checkQuizAnswer() {
+      if (quizAnswered) return;
+      
+      const vocab = quizVocabs[quizIndex];
+      const userAnswer = document.getElementById('quizAnswer').value.trim().toLowerCase();
+      const correctAnswer = quizMode === 'en-to-vi' ? vocab.vietnamese : vocab.english;
+      const correctAnswers = correctAnswer.toLowerCase().split(';').map(a => a.trim());
+      
+      const isCorrect = correctAnswers.some(a => userAnswer === a || userAnswer.includes(a) || a.includes(userAnswer));
+      
+      quizAnswered = true;
+      const input = document.getElementById('quizAnswer');
+      const result = document.getElementById('quizResult');
+      
+      if (isCorrect) {
+        quizCorrect++;
+        input.classList.add('border-green-500', 'bg-green-50');
+        result.innerHTML = 'Chính xác!';
+        result.className = 'mt-4 p-4 rounded-xl font-bold bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200 text-center text-lg';
+      } else {
+        quizIncorrect++;
+        input.classList.add('border-red-500', 'bg-red-50');
+        result.innerHTML = `Sai! Đáp án: <strong class="ml-1">${correctAnswer}</strong>`;
+        result.className = 'mt-4 p-4 rounded-xl font-medium bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border border-red-200 text-center';
+      }
+      
+      // Update score counters
+      document.getElementById('quizCorrectCount').textContent = '✓ ' + quizCorrect;
+      document.getElementById('quizIncorrectCount').textContent = '✗ ' + quizIncorrect;
+      
+      result.classList.remove('hidden');
+      document.getElementById('quizActions').classList.add('hidden');
+      document.getElementById('quizNextAction').classList.remove('hidden');
+    }
+
+    function showHint() {
+      const vocab = quizVocabs[quizIndex];
+      const answer = quizMode === 'en-to-vi' ? vocab.vietnamese : vocab.english;
+      const hint = answer.substring(0, Math.ceil(answer.length / 2)) + '...';
+      document.getElementById('quizHintArea').textContent = 'Gợi ý: ' + hint;
+    }
+
+    function skipQuestion() {
+      quizIncorrect++;
+      quizIndex++;
+      showQuestion();
+    }
+
+    function nextQuestion() {
+      quizIndex++;
+      showQuestion();
+    }
+
+    function finishQuiz() {
+      document.getElementById('quizInProgress').classList.add('hidden');
+      document.getElementById('quizFinished').classList.remove('hidden');
+      
+      const total = quizCorrect + quizIncorrect;
+      const percentage = total > 0 ? Math.round((quizCorrect / total) * 100) : 0;
+      
+      document.getElementById('finalCorrect').textContent = quizCorrect;
+      document.getElementById('finalIncorrect').textContent = quizIncorrect;
+      document.getElementById('finalPercentage').textContent = percentage + '%';
+      
+      // Fireworks effect
+      launchFireworks();
+    }
+    
+    function launchFireworks() {
+      const duration = 3000;
+      const end = Date.now() + duration;
+      
+      const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff1493'];
+      
+      (function frame() {
+        confetti({
+          particleCount: 7,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.7 },
+          colors: colors
+        });
+        confetti({
+          particleCount: 7,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.7 },
+          colors: colors
+        });
+        
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+      
+      // Center burst
+      setTimeout(() => {
+        confetti({
+          particleCount: 150,
+          spread: 100,
+          origin: { x: 0.5, y: 0.5 },
+          colors: colors
+        });
+      }, 500);
+    }
+
+    function endQuizEarly() {
+      if (confirm('Bạn có chắc muốn kết thúc bài kiểm tra?')) {
+        finishQuiz();
+      }
+    }
+
+    function resetQuiz() {
+      document.getElementById('quizSetup').classList.remove('hidden');
+      document.getElementById('quizInProgress').classList.add('hidden');
+      document.getElementById('quizFinished').classList.add('hidden');
+    }
+
+    // ==================== EXPORT PAGE ====================
+    function loadExportLessons() {
+      const data = getData();
+      const select = document.getElementById('exportLessonSelect');
+      select.innerHTML = '<option value="">-- Chọn bài học --</option>' + 
+        data.lessons.map(l => `<option value="${l.id}">${l.title}</option>`).join('');
+    }
+
+    function loadExportData() {
+      const lessonId = document.getElementById('exportLessonSelect').value;
+      if (!lessonId) {
+        document.getElementById('exportActions').classList.add('hidden');
+        document.getElementById('exportPreview').classList.add('hidden');
+        return;
+      }
+
+      const data = getData();
+      const lesson = data.lessons.find(l => l.id === lessonId);
+      const vocabs = data.vocabularies.filter(v => v.lessonId === lessonId);
+
+      document.getElementById('exportTitle').textContent = 'Xuất bài: ' + lesson.title;
+      document.getElementById('exportTableBody').innerHTML = vocabs.map(v => `
+        <tr>
+          <td class="border border-gray-200 p-3">${v.english}</td>
+          <td class="border border-gray-200 p-3">${v.vietnamese}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('exportActions').classList.remove('hidden');
+      document.getElementById('exportPreview').classList.remove('hidden');
+    }
+
+    function printExport() {
+      window.print();
+    }
+
+    function exportCSV() {
+      const lessonId = document.getElementById('exportLessonSelect').value;
+      const data = getData();
+      const lesson = data.lessons.find(l => l.id === lessonId);
+      const vocabs = data.vocabularies.filter(v => v.lessonId === lessonId);
+      
+      const csv = '\ufeff' + 'English,Vietnamese,IPA,POS,Example\n' + 
+        vocabs.map(v => `"${v.english}","${v.vietnamese}","${v.ipa || ''}","${v.pos || ''}","${v.example || ''}"`).join('\n');
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${lesson.title}.csv`;
+      link.click();
+    }
+
+    // ==================== INIT ====================
+    function seedData() {
+      const data = getData();
+      if (data.lessons.length === 0) {
+        const lesson1Id = generateId();
+        const lesson2Id = generateId();
+        const lesson3Id = generateId();
+        const lesson4Id = generateId();
+        
+        data.lessons.push(
+          { id: lesson1Id, title: 'Lesson 1', createdAt: new Date().toISOString() },
+          { id: lesson2Id, title: 'Lesson 2', createdAt: new Date().toISOString() },
+          { id: lesson3Id, title: 'Travel Vocabulary', createdAt: new Date().toISOString() },
+          { id: lesson4Id, title: 'Business English', createdAt: new Date().toISOString() }
+        );
+        
+        data.vocabularies.push(
+          { id: generateId(), lessonId: lesson1Id, english: 'apple', vietnamese: 'quả táo', ipa: 'ˈæpəl', pos: 'noun', example: 'I have an apple.', createdAt: new Date().toISOString() },
+          { id: generateId(), lessonId: lesson1Id, english: 'book', vietnamese: 'sách', ipa: 'bʊk', pos: 'noun', example: 'This is your book.', createdAt: new Date().toISOString() },
+          { id: generateId(), lessonId: lesson1Id, english: 'computer', vietnamese: 'máy tính', ipa: 'kəmˈpjuːtər', pos: 'noun', example: 'This computer is fast.', createdAt: new Date().toISOString() },
+          { id: generateId(), lessonId: lesson1Id, english: 'learn', vietnamese: 'học', ipa: 'lɜːrn', pos: 'verb', example: 'I like to learn English.', createdAt: new Date().toISOString() },
+          
+          { id: generateId(), lessonId: lesson2Id, english: 'Hello', vietnamese: 'Xin chào', ipa: 'həˈləʊ', pos: 'phrase', example: 'Hello, how are you?', createdAt: new Date().toISOString() },
+          { id: generateId(), lessonId: lesson2Id, english: 'Goodbye', vietnamese: 'Tạm biệt', ipa: 'ɡʊdˈbaɪ', pos: 'phrase', example: 'Goodbye, see you!', createdAt: new Date().toISOString() },
+          
+          { id: generateId(), lessonId: lesson3Id, english: 'airport', vietnamese: 'sân bay', ipa: 'ˈeərpɔːrt', pos: 'noun', example: 'The airport is far.', createdAt: new Date().toISOString() },
+          { id: generateId(), lessonId: lesson3Id, english: 'ticket', vietnamese: 'vé', ipa: 'ˈtɪkɪt', pos: 'noun', example: 'Buy a ticket.', createdAt: new Date().toISOString() },
+          { id: generateId(), lessonId: lesson3Id, english: 'suitcase', vietnamese: 'vali', ipa: 'ˈsuːtkeɪs', pos: 'noun', example: 'Pack your suitcase.', createdAt: new Date().toISOString() },
+          { id: generateId(), lessonId: lesson3Id, english: 'destination', vietnamese: 'điểm đến', ipa: 'ˌdestɪˈneɪʃn', pos: 'noun', example: 'What is your destination?', createdAt: new Date().toISOString() },
+          
+          { id: generateId(), lessonId: lesson4Id, english: 'meeting', vietnamese: 'cuộc họp', ipa: 'ˈmiːtɪŋ', pos: 'noun', example: 'We have a meeting.', createdAt: new Date().toISOString() },
+          { id: generateId(), lessonId: lesson4Id, english: 'deadline', vietnamese: 'hạn chót', ipa: 'ˈdedlaɪn', pos: 'noun', example: 'The deadline is tomorrow.', createdAt: new Date().toISOString() }
+        );
+        
+        saveData(data);
+      }
+    }
+
+    seedData();
+    showPage('home');
+    
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>
